@@ -1,7 +1,7 @@
 {
-	"valkyrie_general" : "Utgar",
-	"basic_move" : 7,
-	"basic_range" : 1,
-	"basic_attack" : 5,
-	"basic_defense" : 7
+	"valkyrieGeneral" : "Utgar",
+	"basicMove" : 7,
+	"basicRange" : 1,
+	"basicAttack" : 5,
+	"basicDefense" : 7
 }

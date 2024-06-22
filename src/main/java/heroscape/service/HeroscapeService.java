@@ -8,10 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import heroscape.controller.model.BeingData;
 import heroscape.controller.model.BeingData.ArmyUnitData;
+import heroscape.controller.model.BeingData.WaveData;
 import heroscape.dao.ArmyUnitDao;
 import heroscape.dao.BeingDao;
+import heroscape.dao.WaveDao;
 import heroscape.entity.ArmyUnit;
 import heroscape.entity.Being;
+import heroscape.entity.Wave;
 
 @Service
 public class HeroscapeService {
@@ -22,12 +25,34 @@ public class HeroscapeService {
 	@Autowired
 	private BeingDao beingDao;	
 
+	@Autowired
+	private ArmyUnitDao armyUnitDao;
+	
+	@Autowired WaveDao waveDao;
+	
+	
 	@Transactional(readOnly = false)
 	public BeingData saveBeing(BeingData beingData) {
-		Being being = beingData.toBeing();
-		Being dbBeing = beingDao.save(being);
+		Long beingId = beingData.getBeingId();
+		Being being = findOrCreateBeing(beingId);
 		
-		return new BeingData(dbBeing);
+		copyBeingFields(being, beingData);
+		
+		return new BeingData(beingDao.save(being));
+	}
+	
+	private void copyBeingFields(Being being, BeingData beingData) {
+		being.setBeingId(beingData.getBeingId());
+		being.setName(beingData.getName());
+		being.setOrigin(beingData.getOrigin());
+	}
+
+	private Being findOrCreateBeing(Long beingId) {
+		if (beingId == null) {
+			return new Being();
+		} else {
+			return findBeingById(beingId);
+		}
 	}
 
 	@Transactional(readOnly = true)
@@ -47,8 +72,7 @@ public class HeroscapeService {
 	}
 
 	
-	@Autowired
-	private ArmyUnitDao armyUnitDao;
+//Army Unit
 	
 	@Transactional(readOnly = false)
 	public ArmyUnitData saveArmyUnit(Long beingId, ArmyUnitData armyUnitData) {
@@ -88,7 +112,73 @@ public class HeroscapeService {
 		}
 		return armyUnit;
 	}
+	
+	private ArmyUnit findArmyUnitByIdByWave(Long armyUnitId) {
+		ArmyUnit armyUnit = armyUnitDao.findById(armyUnitId).orElseThrow(()-> new NoSuchElementException("Army Unit with this ID not found."));
+		return armyUnit;
+	}
+	
+//Wave
+	
+	@Transactional(readOnly = false)
+	public WaveData saveWave(WaveData waveData) {
+		Long waveId = waveData.getWaveId();
+		Wave wave = findOrCreateWave(waveId);
+		
+		copyWaveFields(wave, waveData);
+		
+		return new WaveData(waveDao.save(wave));
+	}
+	
+	private void copyWaveFields(Wave wave, WaveData waveData) {
+		wave.setWaveId(waveData.getWaveId());
+		wave.setWaveName(waveData.getWaveName());
+		wave.setCopyrightYear(waveData.getCopyrightYear());
+		wave.setVersion(waveData.getVersion());
+	}
 
+	private Wave findOrCreateWave(Long waveId) {
+		if (waveId == null) {
+			return new Wave();
+		} else {
+			return findWaveById(waveId);
+		}
+	}
+
+	@Transactional(readOnly = true)
+	public WaveData retrieveWaveById(Long waveId) {
+		Wave wave = findWaveById(waveId);
+		return new WaveData(wave);
+	}
+
+	private Wave findWaveById(Long waveId) {
+		return waveDao.findById(waveId).orElseThrow(() -> new NoSuchElementException("Wave with ID=" + waveId + " was not found."));
+	}
+
+	@Transactional(readOnly = false)
+	public void deleteWave(Long waveId) {
+		Wave wave = findWaveById(waveId);
+		waveDao.delete(wave);
+	}
+	
+	
+	
+	@Transactional(readOnly = false)
+	public ArmyUnitData saveArmyUnitWithWave(Long waveId, Long armyUnitId) {
+        
+		Wave wave = findWaveById(waveId);
+        ArmyUnit armyUnit = findArmyUnitByIdByWave(armyUnitId);
+
+        armyUnit.getWaves().add(wave);
+        wave.getArmyUnits().add(armyUnit); 
+
+        armyUnit = armyUnitDao.save(armyUnit);
+        
+        return new ArmyUnitData(armyUnit);
+    }
+	
+	
+	
 }
 
 

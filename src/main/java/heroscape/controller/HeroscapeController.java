@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import heroscape.controller.model.BeingData;
 import heroscape.controller.model.BeingData.ArmyUnitData;
+import heroscape.controller.model.BeingData.WaveData;
 import heroscape.service.HeroscapeService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,6 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 public class HeroscapeController {
 	@Autowired
 	private HeroscapeService heroscapeService;
+	
+	
+	//Being
 	
 	@PostMapping("/being")
 	@ResponseStatus(code = HttpStatus.CREATED)
@@ -55,6 +59,7 @@ public class HeroscapeController {
 	}
 	
 	
+	//Army Unit
 	
 	@PostMapping("/being/{beingId}/armyUnit")
 	@ResponseStatus(code = HttpStatus.CREATED)
@@ -63,6 +68,48 @@ public class HeroscapeController {
 		return heroscapeService.saveArmyUnit(beingId, armyUnitData);
 	}
 	
+	
+	//Wave
+	
+	@PostMapping("/wave")
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public WaveData createWave(@RequestBody WaveData waveData) {
+		log.info("Creating wave {}", waveData);
+		return heroscapeService.saveWave(waveData);
+	}
+	
+	@PutMapping("/wave/{waveId}")
+	public WaveData updateWave(@PathVariable Long waveId, @RequestBody WaveData waveData) {
+		waveData.setWaveId(waveId);
+		log.info("Updating wave {}", waveData);
+		return heroscapeService.saveWave(waveData);
+	}
+	
+	@GetMapping("/wave/{waveId}")
+	public WaveData retrieveWave(@PathVariable Long waveId) {
+		log.info("Retrieving wave with ID={}", waveId);
+		return heroscapeService.retrieveWaveById(waveId);
+	}
+	
+	@DeleteMapping("/wave/{waveId}")
+	public Map<String, String> deleteWave(@PathVariable Long waveId) {
+		log.info("Deleting wave with ID=" + waveId + ".");
+		heroscapeService.deleteWave(waveId);
+		
+		return Map.of("message", "Wave with ID=" + waveId + " was deleted succesffuly.");
+	}
+	
+	
+	
+	//Join Wave and Army Unit (Put Army Unit in Wave)
+	
+	@PostMapping("/wave/{waveId}/armyUnit/{armyUnitId}")
+	public Map<String, String> saveArmyUnitWithWave(@PathVariable Long waveId, @PathVariable Long armyUnitId) {
+		log.info("Joining Wave with ID=" + waveId +" with Army Unit ID=" + armyUnitId +".");
+		heroscapeService.saveArmyUnitWithWave(waveId,armyUnitId);
+		
+		return Map.of("message", "Wave with ID=" + waveId + " with Army Unit ID=" + armyUnitId + " joined successfully.");
+	}
 	
 	
 }
